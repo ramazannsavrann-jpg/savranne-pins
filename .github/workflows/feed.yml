@@ -1,0 +1,24 @@
+name: Publish scheduled pins
+on:
+  push:
+    branches: [main, master]
+    paths: [pins.json, build_feed.py, .github/workflows/feed.yml]
+  schedule:
+    - cron: "5 */4 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: FEED_OUT=. python3 build_feed.py https://ramazannsavrann-jpg.github.io/savranne-pins
+      - run: |
+          if ! git diff --quiet -- feed.xml index.html; then
+            git config user.name "Savranne"
+            git config user.email "ramazannsavrann@gmail.com"
+            git add feed.xml index.html
+            git commit -m "Publish scheduled pins"
+            git push
+          fi
